@@ -6,32 +6,34 @@ object Permutations {
 
   def asSet(value: String): Set[String] = {
 
-    def iterCharacters(value: String, prefix: String, next: Int, processed: mutable.BitSet): Set[String] = {
-      val remainingChars = value.length - processed.size
-      val nextPrefix = prefix + value(next)
-      if (remainingChars == 0) {
-        Set(nextPrefix)
+    def iter(buffer: Array[Char], index: Int, permutations: mutable.Set[String]): Unit = {
+      val remaining = buffer.length - index
+      if (remaining == 1) {
+        permutations += new String(buffer)
       } else {
-        processed.add(next)
+        for (i <- index until buffer.length) {
+          swap(buffer, index, i)
 
-        val nextPerms = for {
-          i <- 0 until value.length if !processed.contains(i)
-          perms <- iterCharacters(value, nextPrefix, i, processed)
-        } yield perms
+          iter(buffer, index + 1, permutations)
 
-        processed.remove(next)
-
-        nextPerms.toSet
+          swap(buffer, i, index)
+        }
       }
     }
 
-    val processed = mutable.BitSet(value.length)
-    val perms = for {
-      i <- 0 until value.length
-      perms <- iterCharacters(value, "", i, processed)
-    } yield perms
+    def swap(buffer: Array[Char], a: Int, b: Int): Unit = {
+      val tmp = buffer(a)
+      buffer.update(a, buffer(b))
+      buffer.update(b, tmp)
+    }
 
-    perms.toSet
+    val buffer = value.toCharArray
+    val permutations = mutable.Set[String]()
+    for (i <- 0 until buffer.length) {
+      iter(buffer, i, permutations)
+    }
+
+    permutations
   }
 
 }
