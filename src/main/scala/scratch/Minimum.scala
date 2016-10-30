@@ -9,7 +9,7 @@ object Minimum {
   }
 
   @tailrec
-  def ofSortedRotated[A](a: Array[A], start: Int, end: Int)(ordering: Ordering[A]): A = {
+  private def ofSortedRotated[A](a: Array[A], start: Int, end: Int)(ordering: Ordering[A]): A = {
     require(a.length > 0)
 
     val remainingElements = end - start
