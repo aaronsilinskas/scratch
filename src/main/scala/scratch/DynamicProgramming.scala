@@ -19,4 +19,20 @@ object DynamicProgramming {
     memo(value)
   }
 
+  def longestSubsequence(value: Array[Int]) = {
+    val memo: Array[Int] = Array.ofDim(value.length)
+    memo(0) = 1
+    for (i <- 1 until value.length) {
+      memo(i) = 1
+      
+      for (j <- (i - 1) to 0 by -1) {
+        if (value(i) > value(j)) {
+          memo(i) = Math.max(memo(i), memo(j) + 1)
+        }
+      }
+    }
+
+    memo.max
+  }
+
 }

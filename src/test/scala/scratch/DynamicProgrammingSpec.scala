@@ -27,7 +27,21 @@ class DynamicProgrammingSpec extends FeatureSpec with Matchers with TableDrivenP
           steps shouldBe expectedSteps
       }
     }
+
+    scenario("Find the longest increasing subsequence of numbers") {
+      val testCases = Table(
+        ("value", "longest"),
+        (Array(4), 1),
+        (Array(1, 2), 2),
+        (Array(10, 5), 1),
+        (Array(5, 3, 4, 8, 6, 7), 4)
+      )
+
+      forAll(testCases) {
+        (value, expectedLongest) =>
+          val longest = DynamicProgramming.longestSubsequence(value)
+          longest shouldBe expectedLongest
+      }
+    }
   }
-
-
 }
