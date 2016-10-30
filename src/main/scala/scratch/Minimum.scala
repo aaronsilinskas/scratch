@@ -13,19 +13,17 @@ object Minimum {
     require(a.length > 0)
 
     val remainingElements = end - start
+    remainingElements match {
+      case 1 => a(start)
+      case 2 => ordering.min(a(start), a(end - 1))
+      case n =>
+        val pivot = start + (n / 2)
 
-    if (remainingElements == 1) {
-      a(start)
-    } else if (remainingElements == 2) {
-      ordering.min(a(start), a(end - 1))
-    } else {
-      val pivot = start + (remainingElements / 2)
-
-      if (ordering.gt(a(pivot), a(end - 1))) {
-        ofSortedRotated(a, pivot + 1, end)(ordering)
-      } else {
-        ofSortedRotated(a, start, pivot + 1)(ordering)
-      }
+        if (ordering.gt(a(pivot), a(end - 1))) {
+          ofSortedRotated(a, pivot + 1, end)(ordering)
+        } else {
+          ofSortedRotated(a, start, pivot + 1)(ordering)
+        }
     }
   }
 
