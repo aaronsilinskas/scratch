@@ -34,9 +34,10 @@ class MinimumOfSortedRotatedSpec extends FeatureSpec with Matchers with TableDri
     }
 
     scenario("Attempting to find the minimum of an empty array will error") {
-      val array = Array.empty[Int]
+      val emptyArray = Array.empty[Int]
+      
       intercept[IllegalArgumentException] {
-        Minimum.ofSortedRotated(array)(Ordering.Int)
+        Minimum.ofSortedRotated(emptyArray)(Ordering.Int)
       }
     }
 
