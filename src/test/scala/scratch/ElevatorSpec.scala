@@ -2,6 +2,7 @@ package scratch
 
 import org.scalatest.{FeatureSpec, GivenWhenThen, Matchers}
 
+import scala.collection.mutable
 import scala.concurrent.duration
 import scala.concurrent.duration.TimeUnit
 import scala.util.Random
@@ -70,14 +71,28 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
 
   class Elevator(initialState: ElevatorState) {
 
+    private val _history = mutable.Queue[ElevatorState](initialState)
+
+    def pickup(floor: Int) = {
+      _history ++= Seq[ElevatorState](
+        Move(floor),
+        Stopped(floor),
+        Opening,
+        Open,
+        Wait(5, duration.SECONDS),
+        Closing,
+        Closed
+      )
+    }
+
     def history(): Seq[ElevatorState] = {
-      ???
+      _history
     }
   }
 
   class Scheduler(elevator: Elevator) {
-    def requestPickup(pickupFloor: Int) = {
-      ???
+    def requestPickup(floor: Int) = {
+      elevator.pickup(floor)
     }
   }
 
@@ -94,7 +109,7 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
 
   object Open extends ElevatorState
 
-  case class Wait(time: Long, unit: TimeUnit)
+  case class Wait(time: Long, unit: TimeUnit) extends ElevatorState
 
   object Closing extends ElevatorState
 
