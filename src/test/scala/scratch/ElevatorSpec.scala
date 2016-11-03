@@ -89,6 +89,22 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
         Closed
       )
     }
+
+    scenario("A pickup request between an elevator and scheduled drop-offs going in the same direction") {
+      Given("an elevator with scheduled drop-offs")
+
+      And("a pickup request between the elevator and drop-offs going in the same direction")
+
+      When("the pickup is requested")
+
+      Then("the elevator finishes drop-offs before the pick-up floor")
+
+      And("the elevator opens the door and closes it on the pickup floor")
+
+      And("the elevator finishes the drop-offs after the pick-up floor")
+      pending
+    }
+
   }
 }
 
