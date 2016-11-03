@@ -1,8 +1,9 @@
 package scratch
 
-import org.scalatest.{FeatureSpec, GivenWhenThen}
+import org.scalatest.{FeatureSpec, GivenWhenThen, Matchers}
 
 import scala.concurrent.duration
+import scala.concurrent.duration.TimeUnit
 import scala.util.Random
 
 /*
@@ -38,7 +39,7 @@ Extra stuff
 - schedulers should take start, stop, transit, and open+close time into account
 - secure floors require authentication before dropoff requests are allowed
 */
-class ElevatorSpec extends FeatureSpec with GivenWhenThen {
+class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
 
   feature("Elevator pickup and dropoff.") {
 
@@ -66,5 +67,37 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen {
       )
     }
   }
+
+  class Elevator(initialState: ElevatorState) {
+
+    def history(): Seq[ElevatorState] = {
+      ???
+    }
+  }
+
+  class Scheduler(elevator: Elevator) {
+    def requestPickup(pickupFloor: Int) = {
+      ???
+    }
+  }
+
+
+  sealed trait ElevatorState
+
+  case class Available(floor: Int) extends ElevatorState
+
+  case class Move(floor: Int) extends ElevatorState
+
+  case class Stopped(floor: Int) extends ElevatorState
+
+  object Opening extends ElevatorState
+
+  object Open extends ElevatorState
+
+  case class Wait(time: Long, unit: TimeUnit)
+
+  object Closing extends ElevatorState
+
+  object Closed extends ElevatorState
 
 }
