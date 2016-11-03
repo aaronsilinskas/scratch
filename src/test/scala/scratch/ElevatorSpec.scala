@@ -95,7 +95,7 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
     scenario("A pickup request between an elevator and scheduled drop-offs going in the same direction") {
       Given("scheduled drop-offs before and after a pickup request going in the same direction")
       val elevatorDirection = if (Random.nextBoolean()) Up else Down
-      val elevatorFloor = 100
+      val elevatorFloor = 100 + Random.nextInt(10)
       val dropOffBeforePickupFloor = afterFloor(elevatorFloor, elevatorDirection)
       val pickupFloor = afterFloor(dropOffBeforePickupFloor, elevatorDirection)
       val dropOffAfterFloor = afterFloor(pickupFloor, elevatorDirection)
@@ -187,7 +187,12 @@ class Scheduler(elevator: Elevator) {
   private val scheduled = mutable.Queue[SchedulerRequest]()
 
   def run() = {
-    scheduled foreach {
+    val orderedScheduled = scheduled.sortBy {
+      case pr: PickupRequest => pr.floor
+      case dr: DropOffRequest => dr.floor
+    }
+
+    orderedScheduled foreach {
       case pr: PickupRequest => elevator.pickup(pr.floor)
       case dr: DropOffRequest => elevator.dropOff(dr.floor)
     }
