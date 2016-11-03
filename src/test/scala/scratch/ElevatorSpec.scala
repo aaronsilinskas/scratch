@@ -42,11 +42,11 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
 
     scenario("A pickup request for an available elevator on a different floor") {
       Given("a pickup request and available elevator")
-      val elevatorFloor = Random.nextInt(10)
+      val elevatorFloor = randomElevatorStartFloor()
       val elevator = new Elevator(Available(elevatorFloor))
       val scheduler = new Scheduler(elevator)
 
-      val pickupFloor = Random.nextInt(10)
+      val pickupFloor = afterFloor(elevatorFloor)
       scheduler.requestPickup(pickupFloor)
 
       When("the elevator runs")
@@ -67,11 +67,11 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
 
     scenario("A drop-off request for an available elevator on different floors") {
       Given("a drop-off request and an available elevator")
-      val elevatorFloor = Random.nextInt(10)
+      val elevatorFloor = randomElevatorStartFloor()
       val elevator = new Elevator(Available(elevatorFloor))
       val scheduler = new Scheduler(elevator)
 
-      val dropOffFloor = Random.nextInt(10)
+      val dropOffFloor = afterFloor(elevatorFloor)
       scheduler.requestDropOff(dropOffFloor)
 
       When("the elevator runs")
@@ -92,8 +92,8 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
 
     scenario("A pickup request between an elevator and scheduled drop-offs going in the same direction") {
       Given("scheduled drop-offs before and after a pickup request going in the same direction")
-      val elevatorDirection = if (Random.nextBoolean()) Up else Down
-      val elevatorFloor = 100 + Random.nextInt(10)
+      val elevatorDirection = randomElevatorDirection()
+      val elevatorFloor = randomElevatorStartFloor()
       val dropOffBeforePickupFloor = afterFloor(elevatorFloor, elevatorDirection)
       val pickupFloor = afterFloor(dropOffBeforePickupFloor, elevatorDirection)
       val dropOffAfterFloor = afterFloor(pickupFloor, elevatorDirection)
@@ -144,7 +144,15 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
     }
   }
 
-  def afterFloor(floor: Int, direction: ElevatorDirection): Int = {
+  def randomElevatorDirection(): ElevatorDirection = {
+    if (Random.nextBoolean()) Up else Down
+  }
+
+  def randomElevatorStartFloor(): Int = {
+    100 + Random.nextInt(10)
+  }
+
+  def afterFloor(floor: Int, direction: ElevatorDirection = randomElevatorDirection()): Int = {
     direction match {
       case Up => floor + 1 + Random.nextInt(10)
       case Down => floor - 1 - Random.nextInt(10)
