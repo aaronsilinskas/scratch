@@ -11,24 +11,23 @@ import scala.util.Random
 Notes for requirements and states:
 
 Basic Elevator
-- elevator pickup request
 - elevator dropoff request
 - open a closing door
 - close an open door without waiting
 
 Scheduling
-- elevator pickup in same direction as scheduled dropoffs
-- elevator pickup in different direction from scheduled dropoffs
+- elevator pickup in same direction as scheduled drop-offs
+- elevator pickup in different direction from scheduled drop-offs
 
 Multiple Elevators - Super Simple Scheduling
 - closest elevator going in same direction handles pickup
-- closest elevator that finishes dropoffs handles pickup
+- closest elevator that finishes drop-offs handles pickup
 
 Pluggable Schedulers
 - custom scheduling logic can be used
 
 Indicators
-- pickup and dropoff updates should be available for UI like button lights
+- pickup and drop-off updates should be available for UI like button lights
 
 Maintenance
 - elevators taken out of service aren't scheduled
@@ -38,11 +37,11 @@ Maintenance
 Extra stuff
 - emergency call
 - schedulers should take start, stop, transit, and open+close time into account
-- secure floors require authentication before dropoff requests are allowed
+- secure floors require authentication before drop-off requests are allowed
 */
 class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
 
-  feature("Elevator pickup and dropoff.") {
+  feature("Elevator pickup and drop-off.") {
 
     scenario("A pickup request is serviced by an elevator") {
       Given("a pickup request and available elevator on different floors")
