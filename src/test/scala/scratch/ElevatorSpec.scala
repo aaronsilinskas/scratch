@@ -44,14 +44,15 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
 
     scenario("A pickup request for an available elevator on a different floor") {
       Given("a pickup request and available elevator")
-      val pickupFloor = Random.nextInt(10)
       val elevatorFloor = Random.nextInt(10)
-
       val elevator = new Elevator(Available(elevatorFloor))
       val scheduler = new Scheduler(elevator)
 
-      When("the pickup is requested")
+      val pickupFloor = Random.nextInt(10)
       scheduler.requestPickup(pickupFloor)
+
+      When("the elevator runs")
+      scheduler.run()
 
       Then("the elevator moves to the pickup floor, opens the door, and closes it")
       elevator.history shouldBe Seq(
@@ -68,14 +69,15 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
 
     scenario("A drop-off request for an available elevator on different floors") {
       Given("a drop-off request and an available elevator")
-      val dropOffFloor = Random.nextInt(10)
       val elevatorFloor = Random.nextInt(10)
-
       val elevator = new Elevator(Available(elevatorFloor))
       val scheduler = new Scheduler(elevator)
 
-      When("the drop-off is requested")
+      val dropOffFloor = Random.nextInt(10)
       scheduler.requestDropOff(dropOffFloor)
+
+      When("the elevator runs")
+      scheduler.run()
 
       Then("the elevator moves to the drop-off floor, opens the door, and closes it")
       elevator.history shouldBe Seq(
@@ -91,20 +93,64 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
     }
 
     scenario("A pickup request between an elevator and scheduled drop-offs going in the same direction") {
-      Given("an elevator with scheduled drop-offs")
+      Given("scheduled drop-offs before and after a pickup request going in the same direction")
+      val elevatorDirection = if (Random.nextBoolean()) Up else Down
+      val elevatorFloor = 100
+      val dropOffBeforePickupFloor = afterFloor(elevatorFloor, elevatorDirection)
+      val pickupFloor = afterFloor(dropOffBeforePickupFloor, elevatorDirection)
+      val dropOffAfterFloor = afterFloor(pickupFloor, elevatorDirection)
 
-      And("a pickup request between the elevator and drop-offs going in the same direction")
+      val elevator = new Elevator(Available(elevatorFloor))
+      val scheduler = new Scheduler(elevator)
+      scheduler.requestDropOff(dropOffBeforePickupFloor)
+      scheduler.requestDropOff(dropOffAfterFloor)
+      scheduler.requestPickup(pickupFloor)
 
-      When("the pickup is requested")
+      When("the elevators run")
+      scheduler.run()
 
       Then("the elevator finishes drop-offs before the pick-up floor")
+      val h = elevator.history()
+      h.take(8) shouldBe Seq(
+        Available(elevatorFloor),
+        Move(dropOffBeforePickupFloor),
+        Stopped(dropOffBeforePickupFloor),
+        Opening,
+        Open,
+        Wait(5, duration.SECONDS),
+        Closing,
+        Closed
+      )
 
       And("the elevator opens the door and closes it on the pickup floor")
+      h.slice(8, 15) shouldBe Seq(
+        Move(pickupFloor),
+        Stopped(pickupFloor),
+        Opening,
+        Open,
+        Wait(5, duration.SECONDS),
+        Closing,
+        Closed
+      )
 
       And("the elevator finishes the drop-offs after the pick-up floor")
-      pending
+      h.slice(15, 22) shouldBe Seq(
+        Move(dropOffAfterFloor),
+        Stopped(dropOffAfterFloor),
+        Opening,
+        Open,
+        Wait(5, duration.SECONDS),
+        Closing,
+        Closed
+      )
     }
+  }
 
+  def afterFloor(floor: Int, direction: ElevatorDirection): Int = {
+    direction match {
+      case Up => floor + 1 + Random.nextInt(10)
+      case Down => floor - 1 - Random.nextInt(10)
+    }
   }
 }
 
@@ -138,12 +184,21 @@ class Elevator(initialState: ElevatorState) {
 
 class Scheduler(elevator: Elevator) {
 
+  private val scheduled = mutable.Queue[SchedulerRequest]()
+
+  def run() = {
+    scheduled foreach {
+      case pr: PickupRequest => elevator.pickup(pr.floor)
+      case dr: DropOffRequest => elevator.dropOff(dr.floor)
+    }
+  }
+
   def requestPickup(floor: Int): Unit = {
-    elevator.pickup(floor)
+    scheduled += PickupRequest(floor)
   }
 
   def requestDropOff(floor: Int): Unit = {
-    elevator.dropOff(floor)
+    scheduled += DropOffRequest(floor)
   }
 }
 
@@ -166,4 +221,14 @@ object Closing extends ElevatorState
 
 object Closed extends ElevatorState
 
+sealed trait ElevatorDirection
 
+object Up extends ElevatorDirection
+
+object Down extends ElevatorDirection
+
+sealed trait SchedulerRequest
+
+case class PickupRequest(floor: Int) extends SchedulerRequest
+
+case class DropOffRequest(floor: Int) extends SchedulerRequest
