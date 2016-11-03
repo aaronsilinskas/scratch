@@ -53,15 +53,10 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
       scheduler.run()
 
       Then("the elevator moves to the pickup floor, opens the door, and closes it")
-      elevator.history shouldBe Seq(
-        Available(elevatorFloor),
-        Move(pickupFloor),
-        Stopped(pickupFloor),
-        Opening(pickupFloor),
-        Open(pickupFloor),
-        Wait(pickupFloor, 5, duration.SECONDS),
-        Closing(pickupFloor),
-        Closed(pickupFloor)
+      elevator.history shouldBe historySeq(
+        available(elevatorFloor),
+        moveTo(pickupFloor),
+        openAndClose(pickupFloor)
       )
     }
 
@@ -78,15 +73,10 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
       scheduler.run()
 
       Then("the elevator moves to the drop-off floor, opens the door, and closes it")
-      elevator.history shouldBe Seq(
-        Available(elevatorFloor),
-        Move(dropOffFloor),
-        Stopped(dropOffFloor),
-        Opening(dropOffFloor),
-        Open(dropOffFloor),
-        Wait(dropOffFloor, 5, duration.SECONDS),
-        Closing(dropOffFloor),
-        Closed(dropOffFloor)
+      elevator.history shouldBe historySeq(
+        available(elevatorFloor),
+        moveTo(dropOffFloor),
+        openAndClose(dropOffFloor)
       )
     }
 
@@ -108,38 +98,22 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
       scheduler.run()
 
       Then("the elevator finishes drop-offs before the pick-up floor")
-      val h = elevator.history()
-      h.take(8) shouldBe Seq(
-        Available(elevatorFloor),
-        Move(dropOffBeforePickupFloor),
-        Stopped(dropOffBeforePickupFloor),
-        Opening(dropOffBeforePickupFloor),
-        Open(dropOffBeforePickupFloor),
-        Wait(dropOffBeforePickupFloor, 5, duration.SECONDS),
-        Closing(dropOffBeforePickupFloor),
-        Closed(dropOffBeforePickupFloor)
+      val remaining1 = verifyPartOfHistory(elevator.history(),
+        available(elevatorFloor),
+        moveTo(dropOffBeforePickupFloor),
+        openAndClose(dropOffBeforePickupFloor)
       )
 
       And("the elevator opens the door and closes it on the pickup floor")
-      h.slice(8, 15) shouldBe Seq(
-        Move(pickupFloor),
-        Stopped(pickupFloor),
-        Opening(pickupFloor),
-        Open(pickupFloor),
-        Wait(pickupFloor, 5, duration.SECONDS),
-        Closing(pickupFloor),
-        Closed(pickupFloor)
+      val remaining2 = verifyPartOfHistory(remaining1,
+        moveTo(pickupFloor),
+        openAndClose(pickupFloor)
       )
 
       And("the elevator finishes the drop-offs after the pick-up floor")
-      h.slice(15, 22) shouldBe Seq(
-        Move(dropOffAfterFloor),
-        Stopped(dropOffAfterFloor),
-        Opening(dropOffAfterFloor),
-        Open(dropOffAfterFloor),
-        Wait(dropOffAfterFloor, 5, duration.SECONDS),
-        Closing(dropOffAfterFloor),
-        Closed(dropOffAfterFloor)
+      remaining2 shouldBe historySeq(
+        moveTo(dropOffAfterFloor),
+        openAndClose(dropOffAfterFloor)
       )
     }
   }
@@ -158,4 +132,37 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
       case Down => floor - 1 - Random.nextInt(10)
     }
   }
+
+  def historySeq(transitions: Seq[ElevatorState]*): Seq[ElevatorState] = {
+    transitions.flatten
+  }
+
+  def available(floor: Int): Seq[ElevatorState] = {
+    Seq(Available(floor))
+  }
+
+  def moveTo(floor: Int): Seq[ElevatorState] = {
+    Seq(
+      Move(floor),
+      Stopped(floor)
+    )
+  }
+
+  def openAndClose(floor: Int): Seq[ElevatorState] = {
+    Seq(
+      Opening(floor),
+      Open(floor),
+      Wait(floor, 5, duration.SECONDS),
+      Closing(floor),
+      Closed(floor)
+    )
+  }
+
+  def verifyPartOfHistory(history: Seq[ElevatorState], expectedHistory: Seq[ElevatorState]*) = {
+    val flattenedHistory = historySeq(expectedHistory: _*)
+    val (h, r) = history.splitAt(flattenedHistory.length)
+    h shouldBe flattenedHistory
+    r
+  }
+
 }
