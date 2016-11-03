@@ -11,7 +11,6 @@ import scala.util.Random
 Notes for requirements and states:
 
 Basic Elevator
-- elevator dropoff request
 - open a closing door
 - close an open door without waiting
 
@@ -66,16 +65,23 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
         Closed
       )
     }
-  }
 
-  class Elevator(initialState: ElevatorState) {
+    scenario("A drop-off request is serviced by an elevator") {
+      Given("a drop-off request and an available elevator on different floors")
+      val dropOffFloor = Random.nextInt(10)
+      val elevatorFloor = Random.nextInt(10)
 
-    private val _history = mutable.Queue[ElevatorState](initialState)
+      val elevator = new Elevator(Available(elevatorFloor))
+      val scheduler = new Scheduler(elevator)
 
-    def pickup(floor: Int) = {
-      _history ++= Seq[ElevatorState](
-        Move(floor),
-        Stopped(floor),
+      When("the drop-off is requested")
+      scheduler.requestDropOff(dropOffFloor)
+
+      Then("the elevator moves to the drop-off floor, opens the door, and closes it")
+      elevator.history shouldBe Seq(
+        Available(elevatorFloor),
+        Move(dropOffFloor),
+        Stopped(dropOffFloor),
         Opening,
         Open,
         Wait(5, duration.SECONDS),
@@ -83,35 +89,65 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
         Closed
       )
     }
-
-    def history(): Seq[ElevatorState] = {
-      _history
-    }
   }
-
-  class Scheduler(elevator: Elevator) {
-    def requestPickup(floor: Int) = {
-      elevator.pickup(floor)
-    }
-  }
-
-
-  sealed trait ElevatorState
-
-  case class Available(floor: Int) extends ElevatorState
-
-  case class Move(floor: Int) extends ElevatorState
-
-  case class Stopped(floor: Int) extends ElevatorState
-
-  object Opening extends ElevatorState
-
-  object Open extends ElevatorState
-
-  case class Wait(time: Long, unit: TimeUnit) extends ElevatorState
-
-  object Closing extends ElevatorState
-
-  object Closed extends ElevatorState
-
 }
+
+class Elevator(initialState: ElevatorState) {
+  private val _history = mutable.Queue[ElevatorState](initialState)
+
+  def pickup(floor: Int): Unit = {
+    moveToOpenAndClose(floor)
+  }
+
+  def dropOff(floor: Int): Unit = {
+    moveToOpenAndClose(floor)
+  }
+
+  private def moveToOpenAndClose(floor: Int): Unit = {
+    _history ++= Seq[ElevatorState](
+      Move(floor),
+      Stopped(floor),
+      Opening,
+      Open,
+      Wait(5, duration.SECONDS),
+      Closing,
+      Closed
+    )
+  }
+
+  def history(): Seq[ElevatorState] = {
+    _history
+  }
+}
+
+class Scheduler(elevator: Elevator) {
+
+  def requestPickup(floor: Int): Unit = {
+    elevator.pickup(floor)
+  }
+
+  def requestDropOff(floor: Int): Unit = {
+    elevator.dropOff(floor)
+  }
+}
+
+
+sealed trait ElevatorState
+
+case class Available(floor: Int) extends ElevatorState
+
+case class Move(floor: Int) extends ElevatorState
+
+case class Stopped(floor: Int) extends ElevatorState
+
+object Opening extends ElevatorState
+
+object Open extends ElevatorState
+
+case class Wait(time: Long, unit: TimeUnit) extends ElevatorState
+
+object Closing extends ElevatorState
+
+object Closed extends ElevatorState
+
+
