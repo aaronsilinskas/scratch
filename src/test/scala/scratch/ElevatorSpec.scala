@@ -59,11 +59,11 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
         Available(elevatorFloor),
         Move(pickupFloor),
         Stopped(pickupFloor),
-        Opening,
-        Open,
-        Wait(5, duration.SECONDS),
-        Closing,
-        Closed
+        Opening(pickupFloor),
+        Open(pickupFloor),
+        Wait(pickupFloor, 5, duration.SECONDS),
+        Closing(pickupFloor),
+        Closed(pickupFloor)
       )
     }
 
@@ -84,11 +84,11 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
         Available(elevatorFloor),
         Move(dropOffFloor),
         Stopped(dropOffFloor),
-        Opening,
-        Open,
-        Wait(5, duration.SECONDS),
-        Closing,
-        Closed
+        Opening(dropOffFloor),
+        Open(dropOffFloor),
+        Wait(dropOffFloor, 5, duration.SECONDS),
+        Closing(dropOffFloor),
+        Closed(dropOffFloor)
       )
     }
 
@@ -115,33 +115,33 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
         Available(elevatorFloor),
         Move(dropOffBeforePickupFloor),
         Stopped(dropOffBeforePickupFloor),
-        Opening,
-        Open,
-        Wait(5, duration.SECONDS),
-        Closing,
-        Closed
+        Opening(dropOffBeforePickupFloor),
+        Open(dropOffBeforePickupFloor),
+        Wait(dropOffBeforePickupFloor, 5, duration.SECONDS),
+        Closing(dropOffBeforePickupFloor),
+        Closed(dropOffBeforePickupFloor)
       )
 
       And("the elevator opens the door and closes it on the pickup floor")
       h.slice(8, 15) shouldBe Seq(
         Move(pickupFloor),
         Stopped(pickupFloor),
-        Opening,
-        Open,
-        Wait(5, duration.SECONDS),
-        Closing,
-        Closed
+        Opening(pickupFloor),
+        Open(pickupFloor),
+        Wait(pickupFloor, 5, duration.SECONDS),
+        Closing(pickupFloor),
+        Closed(pickupFloor)
       )
 
       And("the elevator finishes the drop-offs after the pick-up floor")
       h.slice(15, 22) shouldBe Seq(
         Move(dropOffAfterFloor),
         Stopped(dropOffAfterFloor),
-        Opening,
-        Open,
-        Wait(5, duration.SECONDS),
-        Closing,
-        Closed
+        Opening(dropOffAfterFloor),
+        Open(dropOffAfterFloor),
+        Wait(dropOffAfterFloor, 5, duration.SECONDS),
+        Closing(dropOffAfterFloor),
+        Closed(dropOffAfterFloor)
       )
     }
   }
@@ -155,6 +155,7 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
 }
 
 class Elevator(initialState: ElevatorState) {
+
   private val _history = mutable.Queue[ElevatorState](initialState)
 
   def pickup(floor: Int): Unit = {
@@ -165,15 +166,19 @@ class Elevator(initialState: ElevatorState) {
     moveToOpenAndClose(floor)
   }
 
+  def floor(): Int = {
+    _history.last.floor
+  }
+
   private def moveToOpenAndClose(floor: Int): Unit = {
     _history ++= Seq[ElevatorState](
       Move(floor),
       Stopped(floor),
-      Opening,
-      Open,
-      Wait(5, duration.SECONDS),
-      Closing,
-      Closed
+      Opening(floor),
+      Open(floor),
+      Wait(floor, 5, duration.SECONDS),
+      Closing(floor),
+      Closed(floor)
     )
   }
 
@@ -187,9 +192,11 @@ class Scheduler(elevator: Elevator) {
   private val scheduled = mutable.Queue[SchedulerRequest]()
 
   def run() = {
+    val elevatorFloor = elevator.floor()
+
     val orderedScheduled = scheduled.sortBy {
-      case pr: PickupRequest => pr.floor
-      case dr: DropOffRequest => dr.floor
+      case pr: PickupRequest => Math.abs(pr.floor - elevatorFloor)
+      case dr: DropOffRequest => Math.abs(dr.floor - elevatorFloor)
     }
 
     orderedScheduled foreach {
@@ -208,7 +215,9 @@ class Scheduler(elevator: Elevator) {
 }
 
 
-sealed trait ElevatorState
+sealed abstract class ElevatorState {
+  def floor: Int
+}
 
 case class Available(floor: Int) extends ElevatorState
 
@@ -216,15 +225,15 @@ case class Move(floor: Int) extends ElevatorState
 
 case class Stopped(floor: Int) extends ElevatorState
 
-object Opening extends ElevatorState
+case class Opening(floor: Int) extends ElevatorState
 
-object Open extends ElevatorState
+case class Open(floor: Int) extends ElevatorState
 
-case class Wait(time: Long, unit: TimeUnit) extends ElevatorState
+case class Wait(floor: Int, time: Long, unit: TimeUnit) extends ElevatorState
 
-object Closing extends ElevatorState
+case class Closing(floor: Int) extends ElevatorState
 
-object Closed extends ElevatorState
+case class Closed(floor: Int) extends ElevatorState
 
 sealed trait ElevatorDirection
 
