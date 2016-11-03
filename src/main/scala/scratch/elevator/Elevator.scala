@@ -57,8 +57,14 @@ case class Closing(floor: Int) extends ElevatorState
 
 case class Closed(floor: Int) extends ElevatorState
 
-sealed trait ElevatorDirection
+sealed trait ElevatorDirection {
+  def opposite: ElevatorDirection
+}
 
-object Up extends ElevatorDirection
+object Up extends ElevatorDirection {
+  override def opposite: ElevatorDirection = Down
+}
 
-object Down extends ElevatorDirection
+object Down extends ElevatorDirection {
+  override def opposite: ElevatorDirection = Up
+}

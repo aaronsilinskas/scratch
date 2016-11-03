@@ -13,9 +13,6 @@ Basic Elevator
 - open a closing door
 - close an open door without waiting
 
-Scheduling
-- elevator pickup in different direction from scheduled drop-offs
-
 Multiple Elevators - Super Simple Scheduling
 - closest elevator going in same direction handles pickup
 - closest elevator that finishes drop-offs handles pickup
@@ -47,7 +44,7 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
       val scheduler = new Scheduler(elevator)
 
       val pickupFloor = randomFloorAfter(elevatorFloor)
-      scheduler.requestPickup(pickupFloor)
+      scheduler.requestPickup(pickupFloor, randomElevatorDirection())
 
       When("the elevator runs")
       scheduler.run()
@@ -92,12 +89,12 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
       val scheduler = new Scheduler(elevator)
       scheduler.requestDropOff(dropOffBeforePickupFloor)
       scheduler.requestDropOff(dropOffAfterFloor)
-      scheduler.requestPickup(pickupFloor)
+      scheduler.requestPickup(pickupFloor, elevatorDirection)
 
       When("the elevators run")
       scheduler.run()
 
-      Then("the elevator finishes drop-offs before the pick-up floor")
+      Then("the elevator finishes drop-offs before the pickup floor")
       val remaining1 = verifyPartOfHistory(elevator.history(),
         available(elevatorFloor),
         moveTo(dropOffBeforePickupFloor),
@@ -110,10 +107,46 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
         openAndClose(pickupFloor)
       )
 
-      And("the elevator finishes the drop-offs after the pick-up floor")
+      And("the elevator finishes the drop-offs after the pickup floor")
       remaining2 shouldBe historySeq(
         moveTo(dropOffAfterFloor),
         openAndClose(dropOffAfterFloor)
+      )
+    }
+
+    scenario("A pickup request waits until the elevator is going in the same direction") {
+      Given("scheduled drop-offs going in the opposite direction of a pickup request that is between them")
+      val elevatorFloor = randomElevatorStartFloor()
+      val dropOffDirection = randomElevatorDirection()
+      val dropOffFloor1 = randomFloorAfter(elevatorFloor, dropOffDirection)
+      val pickupFloor = randomFloorAfter(dropOffFloor1, dropOffDirection)
+      val dropOffFloor2 = randomFloorAfter(pickupFloor, dropOffDirection)
+
+      val elevator = new Elevator(Available(elevatorFloor))
+      val scheduler = new Scheduler(elevator)
+      scheduler.requestDropOff(dropOffFloor1)
+      scheduler.requestDropOff(dropOffFloor2)
+
+      scheduler.requestPickup(pickupFloor, dropOffDirection.opposite)
+
+      When("the elevators run")
+      scheduler.run()
+
+      Then("the elevator finishes all drop-offs")
+      val remaining1 = verifyPartOfHistory(elevator.history(),
+        available(elevatorFloor),
+        moveTo(dropOffFloor1),
+        openAndClose(dropOffFloor1)
+      )
+      val remaining2 = verifyPartOfHistory(remaining1,
+        moveTo(dropOffFloor2),
+        openAndClose(dropOffFloor2)
+      )
+
+      And("the elevator opens and closes on the pickup floor")
+      remaining2 shouldBe historySeq(
+        moveTo(pickupFloor),
+        openAndClose(pickupFloor)
       )
     }
   }

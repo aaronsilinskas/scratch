@@ -20,8 +20,8 @@ class Scheduler(elevator: Elevator) {
     }
   }
 
-  def requestPickup(floor: Int): Unit = {
-    scheduled += PickupRequest(floor)
+  def requestPickup(floor: Int, direction:ElevatorDirection): Unit = {
+    scheduled += PickupRequest(floor, direction)
   }
 
   def requestDropOff(floor: Int): Unit = {
@@ -32,6 +32,6 @@ class Scheduler(elevator: Elevator) {
 
 sealed trait SchedulerRequest
 
-case class PickupRequest(floor: Int) extends SchedulerRequest
+case class PickupRequest(floor: Int, direction:ElevatorDirection) extends SchedulerRequest
 
 case class DropOffRequest(floor: Int) extends SchedulerRequest
