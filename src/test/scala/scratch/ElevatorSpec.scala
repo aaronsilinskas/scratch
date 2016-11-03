@@ -42,8 +42,8 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
 
   feature("Elevator pickup and drop-off.") {
 
-    scenario("A pickup request is serviced by an elevator") {
-      Given("a pickup request and available elevator on different floors")
+    scenario("A pickup request for an available elevator on a different floor") {
+      Given("a pickup request and available elevator")
       val pickupFloor = Random.nextInt(10)
       val elevatorFloor = Random.nextInt(10)
 
@@ -66,8 +66,8 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
       )
     }
 
-    scenario("A drop-off request is serviced by an elevator") {
-      Given("a drop-off request and an available elevator on different floors")
+    scenario("A drop-off request for an available elevator on different floors") {
+      Given("a drop-off request and an available elevator")
       val dropOffFloor = Random.nextInt(10)
       val elevatorFloor = Random.nextInt(10)
 
