@@ -46,7 +46,7 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
       val elevator = new Elevator(Available(elevatorFloor))
       val scheduler = new Scheduler(elevator)
 
-      val pickupFloor = afterFloor(elevatorFloor)
+      val pickupFloor = randomFloorAfter(elevatorFloor)
       scheduler.requestPickup(pickupFloor)
 
       When("the elevator runs")
@@ -66,7 +66,7 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
       val elevator = new Elevator(Available(elevatorFloor))
       val scheduler = new Scheduler(elevator)
 
-      val dropOffFloor = afterFloor(elevatorFloor)
+      val dropOffFloor = randomFloorAfter(elevatorFloor)
       scheduler.requestDropOff(dropOffFloor)
 
       When("the elevator runs")
@@ -84,9 +84,9 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
       Given("scheduled drop-offs before and after a pickup request going in the same direction")
       val elevatorDirection = randomElevatorDirection()
       val elevatorFloor = randomElevatorStartFloor()
-      val dropOffBeforePickupFloor = afterFloor(elevatorFloor, elevatorDirection)
-      val pickupFloor = afterFloor(dropOffBeforePickupFloor, elevatorDirection)
-      val dropOffAfterFloor = afterFloor(pickupFloor, elevatorDirection)
+      val dropOffBeforePickupFloor = randomFloorAfter(elevatorFloor, elevatorDirection)
+      val pickupFloor = randomFloorAfter(dropOffBeforePickupFloor, elevatorDirection)
+      val dropOffAfterFloor = randomFloorAfter(pickupFloor, elevatorDirection)
 
       val elevator = new Elevator(Available(elevatorFloor))
       val scheduler = new Scheduler(elevator)
@@ -126,7 +126,7 @@ class ElevatorSpec extends FeatureSpec with GivenWhenThen with Matchers {
     100 + Random.nextInt(10)
   }
 
-  def afterFloor(floor: Int, direction: ElevatorDirection = randomElevatorDirection()): Int = {
+  def randomFloorAfter(floor: Int, direction: ElevatorDirection = randomElevatorDirection()): Int = {
     direction match {
       case Up => floor + 1 + Random.nextInt(10)
       case Down => floor - 1 - Random.nextInt(10)
