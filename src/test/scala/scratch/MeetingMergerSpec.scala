@@ -14,6 +14,7 @@ class MeetingMergerSpec extends FeatureSpec with Matchers with TableDrivenProper
       ("Overlapping", Set((1, 3), (2, 4)), Set((1, 4))),
       ("End touching start", Set((1, 2), (2, 3)), Set((1, 3))),
       ("Start touching end", Set((4, 6), (1, 4)), Set((1, 6))),
+      ("Subsumed meeting", Set((1, 10), (2, 6), (3, 5), (7, 9)), Set((1, 10))),
       ("Unordered with multiple results", Set((0, 1), (3, 5), (4, 8), (10, 12), (9, 10)), Set((0, 1), (3, 8), (9, 12)))
     )
 
