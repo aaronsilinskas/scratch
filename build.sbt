@@ -1,7 +1,7 @@
 lazy val commonSettings = Seq(
   organization := "com.mindwidgets",
   version := "0.1.0",
-  scalaVersion := "2.11.8",
+  scalaVersion := "2.12.0",
   coverageEnabled := true
 )
 
